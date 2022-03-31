@@ -26,4 +26,24 @@ class Division
             $user->save();
         });
     }
+
+    public static function getDivisionByKey($column,$key)
+    {
+        switch ($column){
+            case 'title':
+                $division=DB::selectOne('select * from division where title=?',[$key]);
+                return $division;
+            case 'id':
+                $division=DB::selectOne('select * from division where id=?',[$key]);
+                return $division;
+            default:
+                return '';
+        }
+    }
+
+    public static function getAllDivision()
+    {
+        $allDivisions=DB::select('select id from division');
+        return $allDivisions;
+    }
 }

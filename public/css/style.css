@@ -56,6 +56,12 @@ li{
     background-color: darkslategray;
 }
 
+.list
+{
+    overflow:scroll;
+    height:400px;
+}
+
 .listElem
 {
     margin-top: 10px;

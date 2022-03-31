@@ -2,6 +2,9 @@
     <div class="backBlock">
         <div><h3>Информация о пользователе</h3></div>
         <div>
+            <img style="height: 70px;width:70px" alt="userAvatar" src="/public/img/<?= app()->auth::user()->id_role ?>.jpg">
+        </div>
+        <div>
             <span>Имя</span><br>
             <span><?= app()->auth::user()->name ?></span>
         </div>
@@ -26,7 +29,6 @@
                 ?></span>
         </div>
     </div>
-
     <div id="homePageButtons">
         <div class="sitebutton">
             <a href="<?= app()->route->getUrl('/studyrooms/searchroom') ?>">Просмотр помещений</a>

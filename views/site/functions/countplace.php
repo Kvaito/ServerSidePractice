@@ -1,13 +1,20 @@
 <div class="twoBlockPage">
     <div class="backBlock">
 <span>
-    Выбрать подразделения
+    <h3>Выбрать подразделения</h3>
 </span>
         <form method="get">
+            <input type="hidden" name="formName" value="filter" >
+            Написать вручную <br> <input class="siteInputArea" type="text" name="divisionTitle" placeholder="Название подразделения">
+            <button>
+                🔍
+            </button>
+        </form>
+        <form method="get">
             <input type="hidden" name="formName" value="checkBoxes">
-            Написать вручную <br> <input class="siteInputArea" type="text" name="roomnumber">
+
             <div>Выбрать из списка</div>
-            <div>
+            <div class="list">
                 <ul>
                     <?php
                     foreach ($divisions as $division)
@@ -34,8 +41,8 @@
 
     </div>
     <div class="countedBlock">
-        <span>Подсчитанные места</span>
-        <div class="listElem">
+        <h3><span>Подсчитанные места</span></h3>
+        <div>
             <?= $countedPlace ?> посадочных мест
         </div>
     </div>
