@@ -38,9 +38,23 @@
                 Выбрать всё заведение
             </button>
         </form>
-
     </div>
-    <div class="backBlock">
+
+    <div class="countedBlock">
+        <form method="get">
+            <input type="hidden" name="formName" value="search" >
+            <h3>Поиск</h3> <br>
+            <?php  if(isset($message)){
+                echo $message;
+            } ?>
+            <input class="siteInputArea" type="text" name="searchRequest" placeholder="Поиск по описанию">
+            <button>
+                🔍
+            </button>
+        </form>
+    </div>
+
+    <div class="backBlock" style="height: 320px">
         <h3><span>Найденные помещения</span></h3>
         <div class="list">
             <ul>

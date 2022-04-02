@@ -96,4 +96,17 @@ class Rooms{
             }
             return $countedPlace;
     }
+
+    public static function searchRooms($searchRequest)
+    {
+        $searchRequest='%'.$searchRequest.'%';
+        $foundRooms=DB::select('select * from rooms where Type like ?',[$searchRequest]);
+        $i=0;
+        foreach ($foundRooms as $room)
+        {
+            $foundRooms[$i]=(array)$room;
+            $i++;
+        }
+        return $foundRooms;
+    }
 }

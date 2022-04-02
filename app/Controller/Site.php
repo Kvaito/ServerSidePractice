@@ -12,7 +12,7 @@ use Src\View;
 use Src\Request;
 use Src\Auth\Auth;
 use Src\Validator\Validator;
-
+use Src\Settings;
 class Site
 {
     public function index(Request $request): string
@@ -25,7 +25,8 @@ class Site
     {
 //        $location = DB::select('select * from institute where id = ?',[3]);
         $institute = Institute::all();
-        return (new View())->render('site.home', ['institute' => $institute]);
+        $avatarUrl=User::getAvatarUrl();
+        return (new View())->render('site.home', ['institute' => $institute,'avatarUrl'=>$avatarUrl]);
     }
 
     public function signup(Request $request): string
@@ -35,19 +36,33 @@ class Site
 //            return new View('site.signup', ['message'=>'Пользователь зарегистрирован']);
 //        }
         if ($request->method === 'POST') {
+            $validator = new Validator($request->all(), [
+                'name' => ['required','language'],
+                'login' => ['required', 'unique:users,login'],
+                'password' => ['required']
+            ], [
+                'required' => 'Поле :field пусто',
+                'unique' => 'Поле :field должно быть уникально',
+                'language'=>'Имя должно содержать только кириллицу'
+            ]);
+
+            if($validator->fails()){
+                return new View('site.signup',
+                    ['message' => json_encode($validator->errors(), JSON_UNESCAPED_UNICODE)]);
+            }
+
             //загрузка аватара
             if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] != 4)
             {
-                $uploads_dir = '/uploads';
                 $filename = basename($_FILES['avatar']['name']);
                 echo $filename;
-                if (move_uploaded_file($_FILES["avatar"]["tmp_name"], "$uploads_dir/$filename")) {
-                    echo 'File is successfully uploaded <br>';
-                }
+                $rootPath=Settings::getRootPath();
+                move_uploaded_file($_FILES["avatar"]["tmp_name"], $rootPath.'/public/uploads/'.$filename);
+
             }
-            print_r($_POST);
             User::create($request->all() + [
-                    'id_institute' => Auth::user()->institute->id
+                    'id_institute' => Auth::user()->institute->id,
+                    'avatar_url'=>$filename,
                 ]);
             return new View('site.signup', ['message' => 'Пользователь зарегистрирован']);
         }
@@ -100,6 +115,19 @@ class Site
                 $rooms = Rooms::getAllRooms();
                 return (new View())->render('site.functions.searchroom', ['divisions' => $divisions, 'rooms' => $rooms]);
             }
+            if ($request->method === 'GET' && $_GET['formName'] == 'search') {
+                $validator = new Validator($request->all(), [
+                    'searchRequest' => ['required'],
+                ], [
+                    'required' => 'Поле :field пусто',
+                ]);
+                if($validator->fails()){
+                    return new View('site.functions.searchroom',
+                        ['message' => json_encode($validator->errors(), JSON_UNESCAPED_UNICODE),'divisions' => $divisions, 'rooms' => []]);
+                }
+                $rooms = Rooms::searchRooms($_GET['searchRequest']);
+                return (new View())->render('site.functions.searchroom', ['divisions' => $divisions, 'rooms' => $rooms]);
+            }
         }
         return (new View())->render('site.functions.searchroom', ['divisions' => $divisions, 'rooms' => []]);
     }
@@ -113,8 +141,10 @@ class Site
                 if ($_GET['roomnumber'] == '') {
                     return new View('site.functions.countarea', ['rooms' => $rooms, 'countedArea' => 0]);
                 }
-                $checkedRoom = $_GET['roomnumber'];
                 $checkedRoom = DB::selectOne('select id from rooms where Room_Number =?', [$_GET['roomnumber']]);
+                if(empty($checkedRoom)){
+                    return new View('site.functions.countarea', ['rooms' => $rooms, 'countedArea' => 0]);
+                }
                 $countedArea = Rooms::countArea($checkedRoom);
                 return new View('site.functions.countarea', ['rooms' => $rooms, 'countedArea' => $countedArea]);
             }
@@ -166,6 +196,17 @@ class Site
     {
         if (isset($_POST['formName'])) {
             if ($request->method === 'POST' && $_POST['formName'] == 'divisionAdd') {
+                $validator = new Validator($request->all(), [
+                    'title' => ['required','language'],
+                    'description' => ['required','language'],
+                ], [
+                    'required' => 'Поле :field пусто',
+                    'language'=>'Поля должны содержать только кириллицу'
+                ]);
+                if($validator->fails()){
+                    return new View('site.functions.adminpage',
+                        ['messageDivision' => json_encode($validator->errors(), JSON_UNESCAPED_UNICODE),'messageRoom' => '']);
+                }
                 $titleDiv = $_POST['title'];
                 $descriptionDiv = $_POST['description'];
                 $idInstitute = User::getInstituteId();
@@ -174,6 +215,21 @@ class Site
                 return (new View())->render('site.functions.adminpage', ['messageDivision' => 'Дело сделано', 'messageRoom' => '']);
             }
             if ($request->method === 'POST' && $_POST['formName'] == 'roomAdd') {
+                $validator = new Validator($request->all(), [
+                    'type' => ['language'],
+                    'roomNumber'=>['required','isNumber'],
+                    'floor'=>['isNumber'],
+                    'area'=>['required','isNumber'],
+                    'places'=>['required','isNumber'],
+                ], [
+                    'required' => 'Поле :field пусто',
+                    'language'=>'Поля должны содержать только кириллицу',
+                    'isNumber'=>'Требуется число',
+                ]);
+                if($validator->fails()){
+                    return new View('site.functions.adminpage',
+                        ['messageDivision' => '','messageRoom' => json_encode($validator->errors(), JSON_UNESCAPED_UNICODE)]);
+                }
                 Rooms::addRoom($_POST);
                 unset($_POST);
                 return (new View())->render('site.functions.adminpage', ['messageDivision' => '', 'messageRoom' => 'Дело сделано']);

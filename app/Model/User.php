@@ -18,6 +18,7 @@ class User extends Model implements IdentityInterface
         'name',
         'login',
         'password',
+        'avatar_url'
     ];
 
     protected static function booted()
@@ -54,6 +55,13 @@ class User extends Model implements IdentityInterface
     {
         return self::where(['login' => $credentials['login'],
             'password' => md5($credentials['password'])])->first();
+    }
+
+    public static function getAvatarUrl()
+    {
+        $avatarUrl=DB::selectOne('select avatar_url from users where id= ?',[app()->auth::user()->id]);
+        $avatarUrl=((array) $avatarUrl)['avatar_url'];
+        return $avatarUrl;
     }
 
     public function institute()
